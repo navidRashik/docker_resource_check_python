@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the application code.
-COPY main.py .
+COPY kubernaties_docker_local.py .
 
 # Run the Python application.
-CMD ["python", "main.py"]
+CMD ["python", "kubernaties_docker_local.py"]
