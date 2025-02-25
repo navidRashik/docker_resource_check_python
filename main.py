@@ -8,7 +8,7 @@ import math
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-def heavy_computation():
+async def heavy_computation():
     """
     Perform a heavy computation that's both memory- and CPU-intensive:
     
@@ -20,8 +20,10 @@ def heavy_computation():
     matrix = [[(i * j) % 1000 for j in range(size)] for i in range(size)]
     total = 0.0
     for row in matrix:
+        await asyncio.sleep(0.001)  # Simulate some network io call.
         for value in row:
             total += math.sqrt(value + 1)
+    logging.info(f"Heavy computation result: {total:.2f}")
     return total
 
 async def async_heavy_computation():
@@ -40,11 +42,12 @@ async def heavy_computation_background():
     """
     while True:
         # Create the heavy task without awaiting its completion.
-        task = asyncio.create_task(async_heavy_computation())
+        # task = asyncio.create_task(async_heavy_computation())
+        task = asyncio.create_task(heavy_computation())
         # Use a callback to log the result when the task is done.
         task.add_done_callback(lambda t: logging.info(f"Heavy computation result: {t.result():.2f}"))
         # Immediately move on and schedule the next task.
-        await asyncio.sleep(.01)
+        await asyncio.sleep(.1)
 
 def get_cpu_limit():
     """
