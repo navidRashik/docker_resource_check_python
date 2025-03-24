@@ -15,12 +15,12 @@ async def heavy_computation():
     - Allocates a 1500x1500 matrix.
     - Iterates over each element and computes the square root (adding 1 to vary the work).
     """
-    size = 100
+    size = 250
     # Allocate a 2D matrix, which uses a significant amount of memory.
     matrix = [[(i * j) % 1000 for j in range(size)] for i in range(size)]
     total = 0.0
     for row in matrix:
-        await asyncio.sleep(0.001)  # Simulate some network io call.
+        await asyncio.sleep(0.01)  # Simulate some network io call.
         for value in row:
             total += math.sqrt(value + 1)
     # logging.info(f"Heavy computation result: {total:.2f}")
@@ -156,6 +156,22 @@ def read_memory_usage():
                 logging.error(f"Error reading memory usage from {path}: {e}")
     return 0
 
+def get_total_memory_in_bytes():
+    # with open('/sys/fs/cgroup/memory/memory', 'r') as f:
+    #     print(f.read())
+
+    paths = [
+        "/sys/fs/cgroup/memory/memory.max",  # cgroup v1
+        "/sys/fs/cgroup/memory.max"                  # cgroup v2
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    return int(f.read().strip())
+            except Exception as e:
+                logging.error(f"Error reading memory usage from {path}: {e}")
+    return 1
 
 async def monitor_resources():
     """
@@ -195,10 +211,17 @@ async def monitor_resources():
 
         mem_usage = read_memory_usage()
         mem_usage_mb = mem_usage / (1024 ** 2)
+        total_memory_in_bytes = get_total_memory_in_bytes()
+        total_memory_in_mb = total_memory_in_bytes / (1024 ** 2)
+        print(f"Total memory: {total_memory_in_mb} bytes")
+        memory_usage_percentage = (mem_usage_mb / total_memory_in_mb) * 100
+        print(f"Memory usage percentage: {memory_usage_percentage:.2f}%")
 
         logging.info(f"Raw CPU percent: {raw_cpu_percent:.2f}%, "
                      f"Effective CPU percent: {effective_cpu_percent:.2f}%, "
-                     f"Memory usage: {mem_usage_mb:.2f} MB")
+                     f"Memory usage: {mem_usage_mb:.2f} MB"
+                     f"Memory usage percentage: {memory_usage_percentage:.2f}%"
+                     )
 
         prev_cpu = current_cpu
         prev_time = current_time
